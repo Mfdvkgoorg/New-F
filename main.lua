@@ -348,6 +348,64 @@ local aa = {
         function x.Notify(C, D)
             return t:New(D)
         end
+
+        function x.CreateMinimizer(C, Config)
+            Config = Config or {}
+            if x.Minimizer and x.Minimizer.Parent then
+                return x.Minimizer
+            end
+            local scrGui = Instance.new("ScreenGui")
+            scrGui.Name = "FluentMinimizer"
+            scrGui.ResetOnSpawn = false
+            scrGui.Parent = game:GetService("CoreGui")
+            local btn = Instance.new("ImageButton")
+            btn.Size = Config.Size or UDim2.fromOffset(55, 55)
+            btn.Position = Config.Position or UDim2.new(0, 0, 0, 0)
+            btn.BackgroundColor3 = Color3.fromRGB(105, 105, 105)
+            btn.BackgroundTransparency = Config.Transparency or 0.6
+            btn.Image = Config.Icon or ""
+            local isVis = Config.Visible
+            if isVis == nil then
+                isVis = true
+            end
+            btn.Visible = isVis
+            btn.Parent = scrGui
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, Config.Corner or 40)
+            corner.Parent = btn
+            if Config.Draggable then
+                local dragActive = false
+                local dragStart = nil
+                local startPos = nil
+                local inputSvc = game:GetService("UserInputService")
+                btn.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragActive = true
+                        dragStart = input.Position
+                        startPos = btn.Position
+                    end
+                end)
+                btn.InputChanged:Connect(function(input)
+                    if dragActive and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        local delta = input.Position - dragStart
+                        btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    end
+                end)
+                inputSvc.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragActive = false
+                    end
+                end)
+            end
+            btn.MouseButton1Click:Connect(function()
+                if x.Window and x.Window.Minimize then
+                    x.Window:Minimize()
+                end
+            end)
+            x.Minimizer = scrGui
+            return scrGui
+        end
+
         if getgenv then
             getgenv().Fluent = x
         end
