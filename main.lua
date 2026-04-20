@@ -303,7 +303,7 @@ local aa = {
                 r.init()
             end
             local E =
-                e(s.Window) {Parent = w, Size = D.Size, Title = D.Title, SubTitle = D.SubTitle, TabWidth = D.TabWidth}
+                e(s.Window) {Parent = w, Size = D.Size, Title = D.Title, SubTitle = D.SubTitle, TabWidth = D.TabWidth, UserInfo = D.UserInfo, UserInfoTop = D.UserInfoTop, UserInfoTitle = D.UserInfoTitle, UserInfoSubtitle = D.UserInfoSubtitle, UserInfoSubtitleColor = D.UserInfoSubtitleColor}
             x.Window = E
             x:SetTheme(D.Theme)
             return E
@@ -1889,6 +1889,85 @@ local aa = {
                 {v.AcrylicPaint.Frame, v.TabDisplay, v.ContainerHolder, F, E}
             )
             v.TitleBar = e(d.Parent.TitleBar) {Title = t.Title, SubTitle = t.SubTitle, Parent = v.Root, Window = v}
+            
+            if t.UserInfo then
+                local function parseColor(value)
+                    if typeof(value) == "Color3" then return value end
+                    return Color3.fromRGB(170,170,170)
+                end
+                local userInfoHeight = 56
+                local UserInfoSection = s("Frame", {
+                    Name = "UserInfoSection",
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, userInfoHeight),
+                    Position = t.UserInfoTop and UDim2.fromOffset(0, 0) or UDim2.new(0, 12, 1, -(userInfoHeight + 2)),
+                    Parent = F,
+                })
+                s("Frame", {
+                    Name = "UserInfoSeparator",
+                    BackgroundTransparency = 0.5,
+                    Size = UDim2.new(1, 0, 0, 1),
+                    Position = t.UserInfoTop and UDim2.fromOffset(0, userInfoHeight + 2) or UDim2.new(0, 12, 1, -(userInfoHeight + 10)),
+                    Parent = F,
+                    ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+                })
+                local avatarSize = 28
+                local Avatar = s("ImageLabel", {
+                    Name = "Avatar",
+                    BackgroundTransparency = 1,
+                    Size = UDim2.fromOffset(avatarSize, avatarSize),
+                    Position = UDim2.new(0, 0, 0.5, 0),
+                    AnchorPoint = Vector2.new(0, 0.5),
+                    Image = "rbxassetid://0",
+                    Parent = UserInfoSection,
+                }, {
+                    s("UICorner", { CornerRadius = UDim.new(1, 0) }),
+                    s("UIStroke", { Transparency = 0.7, Thickness = 1, ThemeTag = { Color = "ElementBorder" } }),
+                })
+                pcall(function()
+                    local Players = game:GetService("Players")
+                    local content, isReady = Players:GetUserThumbnailAsync(Players.LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                    if isReady and content then Avatar.Image = content end
+                end)
+                local titleText = tostring((t.UserInfoTitle ~= nil and t.UserInfoTitle) or (game:GetService("Players").LocalPlayer.Name or "User"))
+                local subtitleText = (t.UserInfoSubtitle ~= nil) and tostring(t.UserInfoSubtitle) or ""
+                s("TextLabel", {
+                    Name = "UserName",
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Bottom,
+                    FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                    TextSize = 13,
+                    Text = titleText,
+                    Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
+                    Position = UDim2.new(0, avatarSize + 12, 0, -2),
+                    Parent = UserInfoSection,
+                    ThemeTag = { TextColor3 = "Text" },
+                })
+                s("TextLabel", {
+                    Name = "UserSubtitle",
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Top,
+                    FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+                    TextSize = 12,
+                    TextTransparency = 0.2,
+                    Text = subtitleText,
+                    TextColor3 = parseColor(t.UserInfoSubtitleColor),
+                    Size = UDim2.new(1, -avatarSize - 12, 0.5, 0),
+                    Position = UDim2.new(0, avatarSize + 12, 0.5, 2),
+                    Parent = UserInfoSection,
+                })
+                if t.UserInfoTop then
+                    F.Position = UDim2.new(0, 12, 0, 39)
+                    F.Size = UDim2.new(0, t.TabWidth, 1, -31)
+                    v.TabHolder.Position = UDim2.new(0, 0, 0, 45 + userInfoHeight + 6)
+                    v.TabHolder.Size = UDim2.new(1, 0, 1, -(45 + userInfoHeight + 24))
+                else
+                    v.TabHolder.Size = UDim2.new(1, 0, 1, -(userInfoHeight + 24))
+                end
+            end
+
             if e(k).UseAcrylic then
                 v.AcrylicPaint.AddParent(v.Root)
             end
