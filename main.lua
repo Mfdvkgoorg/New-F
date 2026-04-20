@@ -323,6 +323,9 @@ local aa = {
                 p.Disconnect()
                 x.GUI:Destroy()
             end
+            if x.Minimizer then
+                x.Minimizer:Destroy()
+            end
         end
         function x.ToggleAcrylic(C, D)
             if x.Window then
@@ -2008,6 +2011,9 @@ local aa = {
                     v.AcrylicPaint.Model:Destroy()
                 end
                 v.Root:Destroy()
+                if u.Minimizer then
+                    u.Minimizer:Destroy()
+                end
             end
             local M = e(p.Dialog):Init(v)
             function v.Dialog(N, O)
