@@ -991,7 +991,7 @@ local aa = {
                 "TextButton",
                 {
                     Size = UDim2.new(1, 0, 0, 0),
-                    BackgroundTransparency = opt.Locked and 0.95 or 0.89, -- 🛡️ ทำให้พื้นหลังมืดลงเมื่อโดนล็อค
+                    BackgroundTransparency = opt.Locked and 0.92 or 0.89, -- ทำให้พื้นหลังมืดลงเมื่อโดนล็อค
                     BackgroundColor3 = Color3.fromRGB(130, 130, 130),
                     Parent = o,
                     AutomaticSize = Enum.AutomaticSize.Y,
@@ -1002,10 +1002,10 @@ local aa = {
                 {k("UICorner", {CornerRadius = UDim.new(0, 4)}), q.Border, q.LabelHolder}
             )
 
-            -- ✨ ระบบล็อคแบบ Wind UI Style
+            -- ระบบล็อค
             if opt.Locked then
-                q.TitleLabel.TextTransparency = 0.8 -- ทำให้ชื่อฟังก์ชันจางลง
-                q.DescLabel.TextTransparency = 0.8 -- ทำให้คำอธิบายจางลง
+                q.TitleLabel.TextTransparency = 0.6 -- ทำให้ชื่อฟังก์ชันจางลง
+                q.DescLabel.TextTransparency = 0.6 -- ทำให้คำอธิบายจางลง
                 
                 -- สร้าง Container สำหรับไอคอนและข้อความตรงกลาง
                 local lockContainer = k("Frame", {
@@ -1042,7 +1042,7 @@ local aa = {
                     })
                 })
 
-                -- ปุ่มล่องหนสำหรับดักการคลิก (Bypass Protection)
+                -- ปุ่มล่องหน
                 local blocker = k("TextButton", {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
@@ -2445,7 +2445,7 @@ local aa = {
             assert(n.Title, "Button - Missing Title")
             n.Callback = n.Callback or function()
                 end
-            local isLocked = n.Locked -- 🛡️ ล็อคตัวแปรป้องกัน Bypass
+            local isLocked = n.Locked
             local o = e(k.Element)(n.Title, n.Description, m.Container, true, {Locked = isLocked, LockedTitle = n.LockedTitle})
             local p =
                 j(
@@ -2463,7 +2463,7 @@ local aa = {
             i.AddSignal(
                 o.Frame.MouseButton1Click,
                 function()
-                    if isLocked then return end -- 🛡️ ดัก Bypass
+                    if isLocked then return end
                     m.Library:SafeCallback(n.Callback)
                 end
             )
@@ -2529,7 +2529,7 @@ local aa = {
                     {s("UICorner", {CornerRadius = UDim.new(0, 4)}), B}
                 ),
                 function()
-                    if isLocked then return end -- 🛡️ ดักเปิด Dialog Bypass
+                    if isLocked then return end
                     local C = e(t.Dialog):Create()
                     C.Title.Text = z.Title
                     C.Root.Size = UDim2.fromOffset(430, 330)
@@ -2921,7 +2921,7 @@ local aa = {
                 z.Value = Color3.fromHSV(z.Hue, z.Sat, z.Vib)
                 B.BackgroundColor3 = z.Value
                 B.BackgroundTransparency = z.Transparency
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 u.Library:SafeCallback(z.Callback, z.Value)
                 u.Library:SafeCallback(z.Changed, z.Value)
             end
@@ -3118,7 +3118,7 @@ local aa = {
             c.AddSignal(
                 p.MouseButton1Click,
                 function()
-                    if isLocked then return end -- 🛡️ ดักเปิด Dropdown Bypass
+                    if isLocked then return end
                     l:Open()
                 end
             )
@@ -3348,7 +3348,7 @@ local aa = {
                     end
                 end
                 l:BuildDropdownList()
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 k:SafeCallback(l.Callback, l.Value)
                 k:SafeCallback(l.Changed, l.Value)
             end
@@ -3406,7 +3406,7 @@ local aa = {
             assert(f.Title, "Input - Missing Title")
             f.Callback = f.Callback or function()
                 end
-            local isLocked = f.Locked -- 🛡️ ล็อคตัวแปร
+            local isLocked = f.Locked -- ล็อคตัวแปร
             local h, i =
                 {
                     Value = f.Default or "",
@@ -3437,7 +3437,7 @@ local aa = {
                 end
                 h.Value = m
                 k.Text = m
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 g:SafeCallback(h.Callback, h.Value)
                 g:SafeCallback(h.Changed, h.Value)
             end
@@ -3483,7 +3483,7 @@ local aa = {
             local g = d.Library
             assert(f.Title, "KeyBind - Missing Title")
             assert(f.Default, "KeyBind - Missing default value.")
-            local isLocked = f.Locked -- 🛡️ ล็อคตัวแปร
+            local isLocked = f.Locked -- ล็อคตัวแปร
             local h, i, j =
                 {
                     Value = f.Default,
@@ -3548,7 +3548,7 @@ local aa = {
                 }
             )
             function h.GetState(m)
-                if isLocked then return false end -- 🛡️ ดัก Bypass
+                if isLocked then return false end
                 if af:GetFocusedTextBox() and h.Mode ~= "Always" then
                     return false
                 end
@@ -3584,7 +3584,7 @@ local aa = {
                 n(h.Value)
             end
             function h.DoClick(m)
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 g:SafeCallback(h.Callback, h.Toggled)
                 g:SafeCallback(h.Clicked, h.Toggled)
             end
@@ -3694,7 +3694,7 @@ local aa = {
             assert(f.Min, "Slider - Missing minimum value.")
             assert(f.Max, "Slider - Missing maximum value.")
             assert(f.Rounding, "Slider - Missing rounding value.")
-            local isLocked = f.Locked -- 🛡️ ล็อคตัวแปร
+            local isLocked = f.Locked -- ล็อคตัวแปร
             local h, i, j =
                 {
                     Value = nil,
@@ -3805,7 +3805,7 @@ local aa = {
                 k.Position = UDim2.new((p.Value - h.Min) / (h.Max - h.Min), -7, 0.5, 0)
                 m.Size = UDim2.fromScale((p.Value - h.Min) / (h.Max - h.Min), 1)
                 n.Text = tostring(p.Value)
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 g:SafeCallback(h.Callback, p.Value)
                 g:SafeCallback(h.Changed, p.Value)
             end
@@ -3829,7 +3829,7 @@ local aa = {
         function c.New(d, e, f)
             local g = d.Library
             assert(f.Title, "Toggle - Missing Title")
-            local isLocked = f.Locked -- 🛡️ ล็อคตัวแปร
+            local isLocked = f.Locked -- ล็อคตัวแปร
             local h, i =
                 {
                     Value = f.Default or false,
@@ -3887,7 +3887,7 @@ local aa = {
                     {BackgroundTransparency = h.Value and 0 or 1}
                 ):Play()
                 j.ImageTransparency = h.Value and 0 or 0.5
-                if isLocked then return end -- 🛡️ ดัก Bypass
+                if isLocked then return end
                 g:SafeCallback(h.Callback, h.Value)
                 g:SafeCallback(h.Changed, h.Value)
             end
@@ -3898,7 +3898,7 @@ local aa = {
             ah.AddSignal(
                 i.Frame.MouseButton1Click,
                 function()
-                    if isLocked then return end -- 🛡️ ดักการคลิก
+                    if isLocked then return end
                     h:SetValue(not h.Value)
                 end
             )
