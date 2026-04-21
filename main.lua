@@ -3028,7 +3028,7 @@ local aa = {
                         Size = UDim2.fromOffset(160, 30),
                         Position = UDim2.new(1, -10, 0.5, 0),
                         AnchorPoint = Vector2.new(1, 0.5),
-                        BackgroundTransparency = isLocked and 0.95 or 0.9,
+                        BackgroundTransparency = isLocked and 0.98 or 0.9,
                         Parent = m.Frame,
                         ThemeTag = {BackgroundColor3 = "DropdownFrame"}
                     },
@@ -3037,7 +3037,7 @@ local aa = {
                         e(
                             "UIStroke",
                             {
-                                Transparency = 0.5,
+                                Transparency = isLocked and 0.9 or 0.5, -- 🛠️ ดักเส้นขอบให้จางลง (0.9) ด้วย
                                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                                 ThemeTag = {Color = "InElementBorder"}
                             }
@@ -3429,8 +3429,13 @@ local aa = {
             j.Input.PlaceholderText = f.Placeholder or ""
             
             if isLocked then
-                j.Frame.BackgroundTransparency = 0.94
-                j.Input.TextTransparency = 0.7
+                j.Frame.BackgroundTransparency = 0.98
+                j.Input.TextTransparency = 0.85
+                for _, child in ipairs(j.Frame:GetChildren()) do
+                    if child:IsA("UIStroke") then
+                        child.Transparency = 0.9
+                    end
+                end
             end
 
             local k = j.Input
@@ -3726,7 +3731,7 @@ local aa = {
                     Position = UDim2.new(0, -7, 0.5, 0),
                     Size = UDim2.fromOffset(14, 14),
                     Image = "http://www.roblox.com/asset/?id=12266946128",
-                    ImageTransparency = isLocked and 0.7 or 0,
+                    ImageTransparency = isLocked and 0.95 or 0, -- 🛠️ ปรับจาก 0.7 เป็น 0.95 ลูกกลิ้งจะจางเกือบหาย
                     ThemeTag = {ImageColor3 = "Accent"}
                 }
             )
@@ -3738,7 +3743,7 @@ local aa = {
                 ),
                 ai(
                     "Frame",
-                    {Size = UDim2.new(0, 0, 1, 0), BackgroundTransparency = isLocked and 0.7 or 0, ThemeTag = {BackgroundColor3 = "Accent"}},
+                    {Size = UDim2.new(0, 0, 1, 0), BackgroundTransparency = isLocked and 0.95 or 0, ThemeTag = {BackgroundColor3 = "Accent"}}, -- 🛠️ ปรับจาก 0.7 เป็น 0.95 เส้นสีๆ ที่วิ่งตามลูกกลิ้งจะจางลง
                     {ai("UICorner", {CornerRadius = UDim.new(1, 0)})}
                 ),
                 ai(
@@ -3751,7 +3756,7 @@ local aa = {
                         TextXAlignment = Enum.TextXAlignment.Right,
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         BackgroundTransparency = 1,
-                        TextTransparency = isLocked and 0.7 or 0,
+                        TextTransparency = isLocked and 0.85 or 0, -- 🛠️ ตัวเลข 50 ด้านขวาจะจางลงอีก
                         Size = UDim2.new(0, 100, 0, 14),
                         Position = UDim2.new(0, -4, 0.5, 0),
                         AnchorPoint = Vector2.new(1, 0.5),
