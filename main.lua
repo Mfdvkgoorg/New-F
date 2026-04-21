@@ -3004,6 +3004,7 @@ local aa = {
                         AnchorPoint = Vector2.new(0, 0.5),
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         BackgroundTransparency = 1,
+                        TextTransparency = isLocked and 0.7 or 0,
                         TextTruncate = Enum.TextTruncate.AtEnd,
                         ThemeTag = {TextColor3 = "Text"}
                     }
@@ -3016,6 +3017,7 @@ local aa = {
                         AnchorPoint = Vector2.new(1, 0.5),
                         Position = UDim2.new(1, -8, 0.5, 0),
                         BackgroundTransparency = 1,
+                        ImageTransparency = isLocked and 0.7 or 0,
                         ThemeTag = {ImageColor3 = "SubText"}
                     }
                 )
@@ -3026,7 +3028,7 @@ local aa = {
                         Size = UDim2.fromOffset(160, 30),
                         Position = UDim2.new(1, -10, 0.5, 0),
                         AnchorPoint = Vector2.new(1, 0.5),
-                        BackgroundTransparency = 0.9,
+                        BackgroundTransparency = isLocked and 0.95 or 0.9,
                         Parent = m.Frame,
                         ThemeTag = {BackgroundColor3 = "DropdownFrame"}
                     },
@@ -3425,6 +3427,12 @@ local aa = {
             j.Frame.Size = UDim2.fromOffset(160, 30)
             j.Input.Text = f.Default or ""
             j.Input.PlaceholderText = f.Placeholder or ""
+            
+            if isLocked then
+                j.Frame.BackgroundTransparency = 0.94
+                j.Input.TextTransparency = 0.7
+            end
+
             local k = j.Input
             function h.SetValue(l, m)
                 if f.MaxLength and #m > f.MaxLength then
@@ -3718,6 +3726,7 @@ local aa = {
                     Position = UDim2.new(0, -7, 0.5, 0),
                     Size = UDim2.fromOffset(14, 14),
                     Image = "http://www.roblox.com/asset/?id=12266946128",
+                    ImageTransparency = isLocked and 0.7 or 0,
                     ThemeTag = {ImageColor3 = "Accent"}
                 }
             )
@@ -3729,7 +3738,7 @@ local aa = {
                 ),
                 ai(
                     "Frame",
-                    {Size = UDim2.new(0, 0, 1, 0), ThemeTag = {BackgroundColor3 = "Accent"}},
+                    {Size = UDim2.new(0, 0, 1, 0), BackgroundTransparency = isLocked and 0.7 or 0, ThemeTag = {BackgroundColor3 = "Accent"}},
                     {ai("UICorner", {CornerRadius = UDim.new(1, 0)})}
                 ),
                 ai(
@@ -3742,6 +3751,7 @@ local aa = {
                         TextXAlignment = Enum.TextXAlignment.Right,
                         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
                         BackgroundTransparency = 1,
+                        TextTransparency = isLocked and 0.7 or 0,
                         Size = UDim2.new(0, 100, 0, 14),
                         Position = UDim2.new(0, -4, 0.5, 0),
                         AnchorPoint = Vector2.new(1, 0.5),
@@ -3755,7 +3765,7 @@ local aa = {
                     Size = UDim2.new(1, 0, 0, 4),
                     AnchorPoint = Vector2.new(1, 0.5),
                     Position = UDim2.new(1, -10, 0.5, 0),
-                    BackgroundTransparency = 0.4,
+                    BackgroundTransparency = isLocked and 0.8 or 0.4,
                     Parent = j.Frame,
                     ThemeTag = {BackgroundColor3 = "SliderRail"}
                 },
@@ -3849,11 +3859,11 @@ local aa = {
                         Size = UDim2.fromOffset(14, 14),
                         Position = UDim2.new(0, 2, 0.5, 0),
                         Image = "http://www.roblox.com/asset/?id=12266946128",
-                        ImageTransparency = 0.5,
+                        ImageTransparency = isLocked and 0.8 or 0.5,
                         ThemeTag = {ImageColor3 = "ToggleSlider"}
                     }
                 ),
-                ai("UIStroke", {Transparency = 0.5, ThemeTag = {Color = "ToggleSlider"}})
+                ai("UIStroke", {Transparency = isLocked and 0.8 or 0.5, ThemeTag = {Color = "ToggleSlider"}})
             local l =
                 ai(
                 "Frame",
