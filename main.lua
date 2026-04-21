@@ -991,31 +991,58 @@ local aa = {
                 "TextButton",
                 {
                     Size = UDim2.new(1, 0, 0, 0),
-                    BackgroundTransparency = 0.89,
+                    BackgroundTransparency = opt.Locked and 0.95 or 0.89, -- 🛡️ ทำให้พื้นหลังมืดลงเมื่อโดนล็อค
                     BackgroundColor3 = Color3.fromRGB(130, 130, 130),
                     Parent = o,
                     AutomaticSize = Enum.AutomaticSize.Y,
                     Text = "",
                     LayoutOrder = 7,
-                    ThemeTag = {BackgroundColor3 = "Element", BackgroundTransparency = "ElementTransparency"}
+                    ThemeTag = {BackgroundColor3 = "Element", BackgroundTransparency = opt.Locked and "ElementTransparency" or "ElementTransparency"}
                 },
                 {k("UICorner", {CornerRadius = UDim.new(0, 4)}), q.Border, q.LabelHolder}
             )
 
-            -- ✨ ระบบล็อค 2 ชั้น: หน้าต่างแจ้งเตือนและแม่กุญแจ
+            -- ✨ ระบบล็อคแบบ Wind UI Style
             if opt.Locked then
-                q.TitleLabel.TextTransparency = 0.5
-                q.DescLabel.TextTransparency = 0.5
-                k("ImageLabel", {
-                    Image = "rbxassetid://10723434711",
-                    Size = UDim2.fromOffset(18, 18),
-                    Position = UDim2.new(1, -12, 0.5, 0),
-                    AnchorPoint = Vector2.new(1, 0.5),
+                q.TitleLabel.TextTransparency = 0.8 -- ทำให้ชื่อฟังก์ชันจางลง
+                q.DescLabel.TextTransparency = 0.8 -- ทำให้คำอธิบายจางลง
+                
+                -- สร้าง Container สำหรับไอคอนและข้อความตรงกลาง
+                local lockContainer = k("Frame", {
+                    Size = UDim2.new(1, 0, 1, 0),
                     BackgroundTransparency = 1,
                     Parent = q.Frame,
                     ZIndex = 10,
-                    ThemeTag = {ImageColor3 = "SubText"}
+                }, {
+                    k("UIListLayout", {
+                        FillDirection = Enum.FillDirection.Horizontal,
+                        HorizontalAlignment = Enum.HorizontalAlignment.Center,
+                        VerticalAlignment = Enum.VerticalAlignment.Center,
+                        Padding = UDim.new(0, 6),
+                        SortOrder = Enum.SortOrder.LayoutOrder
+                    }),
+                    -- ไอคอนแม่กุญแจ
+                    k("ImageLabel", {
+                        Image = "rbxassetid://10723434711", -- รูปแม่กุญแจ
+                        Size = UDim2.fromOffset(16, 16),
+                        BackgroundTransparency = 1,
+                        ThemeTag = {ImageColor3 = "Text"},
+                        LayoutOrder = 1
+                    }),
+                    -- ข้อความ LockedTitle
+                    k("TextLabel", {
+                        FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal),
+                        Text = opt.LockedTitle or "Must Premium Only",
+                        TextColor3 = Color3.fromRGB(240, 240, 240),
+                        TextSize = 13,
+                        AutomaticSize = Enum.AutomaticSize.XY,
+                        BackgroundTransparency = 1,
+                        ThemeTag = {TextColor3 = "Text"},
+                        LayoutOrder = 2
+                    })
                 })
+
+                -- ปุ่มล่องหนสำหรับดักการคลิก (Bypass Protection)
                 local blocker = k("TextButton", {
                     Size = UDim2.fromScale(1, 1),
                     BackgroundTransparency = 1,
@@ -1023,11 +1050,12 @@ local aa = {
                     ZIndex = 99,
                     Parent = q.Frame
                 })
+                
                 j.AddSignal(blocker.MouseButton1Click, function()
                     if getgenv and getgenv().Fluent then
                         getgenv().Fluent:Notify({
                             Title = "🔒 Locked Feature",
-                            Content = opt.LockedTitle or "This feature is locked!",
+                            Content = opt.LockedTitle or "Must Premium Only",
                             Duration = 3
                         })
                     end
