@@ -991,7 +991,7 @@ local aa = {
                 "TextButton",
                 {
                     Size = UDim2.new(1, 0, 0, 0),
-                    BackgroundTransparency = opt.Locked and 0.92 or 0.89, -- ทำให้พื้นหลังมืดลงเมื่อโดนล็อค
+                    BackgroundTransparency = opt.Locked and 0.94 or 0.89, -- ทำให้พื้นหลังมืดลงเมื่อโดนล็อค
                     BackgroundColor3 = Color3.fromRGB(130, 130, 130),
                     Parent = o,
                     AutomaticSize = Enum.AutomaticSize.Y,
@@ -1004,8 +1004,8 @@ local aa = {
 
             -- ระบบล็อค
             if opt.Locked then
-                q.TitleLabel.TextTransparency = 0.6 -- ทำให้ชื่อฟังก์ชันจางลง
-                q.DescLabel.TextTransparency = 0.6 -- ทำให้คำอธิบายจางลง
+                q.TitleLabel.TextTransparency = 0.7 -- ทำให้ชื่อฟังก์ชันจางลง
+                q.DescLabel.TextTransparency = 0.7 -- ทำให้คำอธิบายจางลง
                 
                 -- สร้าง Container สำหรับไอคอนและข้อความตรงกลาง
                 local lockContainer = k("Frame", {
