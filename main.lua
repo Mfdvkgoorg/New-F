@@ -7,6 +7,11 @@
     License: MIT
     GitHub: https://github.com/dawid-scripts/Fluent
 --]]
+
+--[[[
+    ไฟล์ animatedgui.lua ดึงจาก local _fn = loadstring(game:HttpGet
+]]
+
 local a, b = {
     {
         1,
@@ -191,12 +196,62 @@ local a, b = {
     }
 }
 
-local Animation
-pcall(function()
-    local _fn = loadstring(game:HttpGet("https://raw.githubusercontent.com/Mfdvkgoorg/New-F/main/animatedgui.lua"))
-    if _fn then Animation = _fn() end
-end)
-if not Animation then Animation = {Apply = function() end} end
+local RunService = game:GetService("RunService")
+local Animation = {}
+local connections = {}
+
+local function ClearAllAnimations()
+    for _, c in ipairs(connections) do
+        pcall(function() c:Disconnect() end)
+    end
+    table.clear(connections)
+end
+
+function Animation.Apply(theme, root)
+    ClearAllAnimations()
+
+    if not theme or not root or not getgenv().ShineEnabled or not theme.ShineEnabled or not theme.Shine then
+        return
+    end
+
+    local ShineConfig = theme.Shine
+    local Speed = ShineConfig.Speed or 0.5
+    local RotationSpeed = ShineConfig.RotationSpeed or 25
+    local ColorSequence = ShineConfig.ColorSequence
+    
+    for _, obj in ipairs(root:GetDescendants()) do
+        if obj:IsA("UIGradient") and obj.Name ~= "BorderShineGradient" then
+            local t = 0
+            local conn
+            conn = RunService.RenderStepped:Connect(function(dt)
+                local t = obj:GetAttribute("old_t") or 0
+                t += dt * Speed
+                obj:SetAttribute("old_t", t)
+                
+                obj.Rotation = (t * RotationSpeed) % 360
+                obj.Color = ColorSequence
+            end)
+            table.insert(connections, conn)
+        end
+
+        if obj:IsA("UIStroke") and theme.StrokeShine then
+            local from = theme.StrokeDark or theme.AcrylicBorder
+            local shine = theme.Accent
+            local t = 0
+            local conn
+            conn = RunService.RenderStepped:Connect(function(dt)
+                local t = obj:GetAttribute("old_t") or 0
+                t += dt * Speed
+                obj.Thickness = 2
+                obj:SetAttribute("old_t", t)
+            
+                obj.Color = from:Lerp(shine, (math.sin(t) + 1) / 2)
+            end)
+            table.insert(connections, conn)
+        end
+    end
+end
+
 getgenv().ShineEnabled = true
 getgenv().ButtonGradients = {
     Background = ColorSequence.new {
@@ -224,7 +279,8 @@ local aa = {
         local p, q, r, s = e(o.Creator), e(o.Elements), e(o.Acrylic), o.Components
         local t, u, v = e(s.Notification), p.New, protectgui or (syn and syn.protect_gui) or function()
                 end
-        local w = u("ScreenGui", {Parent = i:IsStudio() and j.PlayerGui or game:GetService "CoreGui"})
+        local guiParent = i:IsStudio() and j.PlayerGui or (gethui and gethui()) or game:GetService "CoreGui"
+        local w = u("ScreenGui", {Parent = guiParent, DisplayOrder = 2147483647})
         v(w)
         t:Init(w)
         local x = {
@@ -976,15 +1032,20 @@ local aa = {
                     q.DescLabel
                 }
             )
+            -- สร้างตัวไล่สีและบันทึกเข้าระบบ
+            local borderGrad = k("UIGradient", {Rotation = 0, Name = "BorderShineGradient"})
+            table.insert(j.GradientBorders, borderGrad)
+
             q.Border =
                 k(
                 "UIStroke",
                 {
-                    Transparency = 0.5,
+                    Transparency = 0, -- เปิดสุดให้เห็นแสงชัดๆ
+                    Thickness = 1.5, -- ปรับความหนาเส้นตามความชอบ (ค่าเดิมคือ 1)
                     ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                    Color = Color3.fromRGB(0, 0, 0),
-                    ThemeTag = {Color = "ElementBorder"}
-                }
+                    Color = Color3.fromRGB(255, 255, 255) -- พื้นขาวเพื่อให้ไล่สีทำงานได้
+                },
+                { borderGrad } -- ยัด Gradient เข้าไปใน Stroke
             )
             q.Frame =
                 k(
@@ -1081,6 +1142,13 @@ local aa = {
             end
             q:SetTitle(m)
             q:SetDesc(n)
+            
+            local lib = e(h)
+            local currentWin = lib.Window or (lib.Windows and lib.Windows[#lib.Windows])
+            if currentWin and currentWin.RegisterElement then
+                currentWin.RegisterElement(q.Frame, m, "Element", n)
+            end
+
             if p then
                 local r, s, t =
                     h.Themes,
@@ -1363,6 +1431,13 @@ local aa = {
                     m.Root.Size = UDim2.new(1, 0, 0, m.Layout.AbsoluteContentSize.Y + 25)
                 end
             )
+            
+            local lib = e(h)
+            local currentWin = lib.Window or (lib.Windows and lib.Windows[#lib.Windows])
+            if currentWin and currentWin.RegisterElement then
+                currentWin.RegisterElement(m.Root, k, "Section")
+            end
+            
             return m
         end
     end,
@@ -1400,7 +1475,7 @@ local aa = {
                 "TextButton",
                 {
                     Size = UDim2.new(1, 0, 0, 34),
-                    BackgroundTransparency = 1,
+                    BackgroundTransparency = 0.55, -- ทำให้สีพื้นหลัง tap main / setting มองเห็นชัดขึ้น
                     Parent = s,
                     ThemeTag = {BackgroundColor3 = "Tab"}
                 },
@@ -1454,8 +1529,8 @@ local aa = {
                     MidImage = "rbxassetid://6889812721",
                     TopImage = "rbxassetid://6276641225",
                     ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                    ScrollBarImageTransparency = 0.95,
-                    ScrollBarThickness = 3,
+                    ScrollBarImageTransparency = 0.60, -- 🟢 ปรับโปร่งใสเหลือ 15% (เห็นชัดแต่นุ่มนวล)
+                    ScrollBarThickness = 3, -- 🟢 หนา 3px เท่าเดิม
                     BorderSizePixel = 0,
                     CanvasSize = UDim2.fromScale(0, 0),
                     ScrollingDirection = Enum.ScrollingDirection.Y
@@ -1473,23 +1548,27 @@ local aa = {
                     )
                 }
             )
+            
+            -- 🟢 บันทึก Scrollbar หลักเข้าสู่ระบบ RGB
+            table.insert(j.RGBScrollbars, x.ContainerFrame)
+            
             j.AddSignal(
                 y:GetPropertyChangedSignal "AbsoluteContentSize",
                 function()
                     x.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, y.AbsoluteContentSize.Y + 2)
                 end
             )
-            x.Motor, x.SetTransparency = j.SpringMotor(1, x.Frame, "BackgroundTransparency")
+            x.Motor, x.SetTransparency = j.SpringMotor(0.92, x.Frame, "BackgroundTransparency")
             j.AddSignal(
                 x.Frame.MouseEnter,
                 function()
-                    x.SetTransparency(x.Selected and 0.85 or 0.89)
+                    x.SetTransparency(x.Selected and 0.23 or 0.23) -- ความสว่างตอนเอาเม้าส์ชี้ Tap main / Setting
                 end
             )
             j.AddSignal(
                 x.Frame.MouseLeave,
                 function()
-                    x.SetTransparency(x.Selected and 0.89 or 1)
+                    x.SetTransparency(x.Selected and 0.5 or 0.55) -- ความสว่างตอนเอาเมาส์ออก (ให้กลับไปที่ค่าเริ่มต้น)
                 end
             )
             j.AddSignal(
@@ -1528,7 +1607,7 @@ local aa = {
             local r = o.Window
             o.SelectedTab = q
             for s, t in next, o.Tabs do
-                t.SetTransparency(1)
+                t.SetTransparency(0.92)
                 t.Selected = false
             end
             o.Tabs[q].SetTransparency(0.89)
@@ -1893,11 +1972,219 @@ local aa = {
                     "Frame",
                     {Size = UDim2.fromOffset(20, 20), BackgroundTransparency = 1, Position = UDim2.new(1, -20, 1, -20)}
                 )
+            local SearchElements = {}
+            local AllElements = {}
+
+            local function normalizeText(text)
+                if not text then return "" end
+                text = tostring(text):lower():gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", " ")
+                return text
+            end
+
+            local function checkMatch(text, query)
+                if query == "" then return true end
+                local normText = normalizeText(text)
+                if normText == "" then return false end
+                local words = {}
+                for word in string.gmatch(query, "%S+") do table.insert(words, word) end
+                if #words == 0 then return true end
+                for _, word in ipairs(words) do
+                    if not string.find(normText, word, 1, true) then return false end
+                end
+                return true
+            end
+
+            local function UpdateElementVisibility(searchTerm)
+                local query = normalizeText(searchTerm)
+                local matchedSectionFrames = {}
+                local elementsInMatchedSections = {}
+
+                for element, data in pairs(AllElements) do
+                    if element and element.Parent and data.type == "Section" then
+                        if query ~= "" and checkMatch(data.title, query) then
+                            matchedSectionFrames[element] = true
+                            local container = element:FindFirstChild("Container")
+                            if container then
+                                for _, child in pairs(container:GetChildren()) do
+                                    if not child:IsA("UIListLayout") and not child:IsA("UIPadding") then
+                                        elementsInMatchedSections[child] = true
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
+                for element, data in pairs(AllElements) do
+                    if element and element.Parent then
+                        if query == "" then
+                            element.Visible = true
+                        else
+                            local matchesTitle = checkMatch(data.title, query)
+                            local matchesDesc = checkMatch(data.description, query)
+                            local matchesSection = elementsInMatchedSections[element] == true
+
+                            if not matchesSection and data.section and matchedSectionFrames[data.section] then
+                                matchesSection = true
+                            end
+
+                            element.Visible = matchesTitle or matchesDesc or matchesSection
+                        end
+                    end
+                end
+
+                task.spawn(function()
+                    task.wait(0.05)
+                    if not v or not v.ContainerHolder then return end
+                    for _, tabContainer in pairs(v.ContainerHolder:GetChildren()) do
+                        if tabContainer:IsA("ScrollingFrame") or tabContainer:IsA("CanvasGroup") then
+                            local actualContainer = tabContainer:IsA("CanvasGroup") and tabContainer:FindFirstChildWhichIsA("ScrollingFrame") or tabContainer
+                            if actualContainer then
+                                local cLayout = actualContainer:FindFirstChild("UIListLayout")
+                                if cLayout then actualContainer.CanvasSize = UDim2.new(0, 0, 0, math.max(0, cLayout.AbsoluteContentSize.Y + 2)) end
+                                for _, section in pairs(actualContainer:GetChildren()) do
+                                    if section:IsA("Frame") and section.Name ~= "UIPadding" then
+                                        local sContainer = section:FindFirstChild("Container")
+                                        if sContainer and sContainer:IsA("Frame") then
+                                            local sLayout = sContainer:FindFirstChild("UIListLayout")
+                                            if sLayout then
+                                                local hasVis = false
+                                                for _, el in pairs(sContainer:GetChildren()) do
+                                                    if not el:IsA("UIListLayout") and el.Visible then hasVis = true break end
+                                                end
+                                                if query == "" or hasVis then
+                                                    section.Visible = true
+                                                    sContainer.Size = UDim2.new(1, 0, 0, math.max(0, sLayout.AbsoluteContentSize.Y))
+                                                else
+                                                    section.Visible = false
+                                                    sContainer.Size = UDim2.new(1, 0, 0, 0)
+                                                end
+                                            end
+                                            local rootLayout = section:FindFirstChild("UIListLayout")
+                                            if rootLayout then section.Size = UDim2.new(1, 0, 0, math.max(0, rootLayout.AbsoluteContentSize.Y + 25)) end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+
+            local function RegisterElement(elementFrame, title, elementType, description)
+                if elementFrame then
+                    local sectionFrame = nil
+                    local parent = elementFrame.Parent
+                    while parent do
+                        if parent:FindFirstChild("Container") then
+                            local secContainer = parent:FindFirstChild("Container")
+                            if secContainer and elementFrame.Parent == secContainer then
+                                sectionFrame = parent
+                                break
+                            end
+                        end
+                        if parent:IsA("ScreenGui") then break end
+                        parent = parent.Parent
+                    end
+                    AllElements[elementFrame] = {
+                        title = tostring(title or ""),
+                        type = elementType or "Element",
+                        description = tostring(description or ""),
+                        section = sectionFrame
+                    }
+                end
+            end
+
+            v.ShowSearch = (t.Search == nil) and true or (t.Search and true or false)
+
+            local SearchFrame = s("Frame", {
+                Size = UDim2.new(1, 0, 0, 28),
+                Position = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 0.7,
+                ZIndex = 10,
+                Visible = v.ShowSearch,
+                BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+                ThemeTag = { BackgroundColor3 = "Element" }
+            }, {
+                s("UICorner", { CornerRadius = UDim.new(0, 4) }),
+                s("UIStroke", { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Transparency = 0.5, ThemeTag = { Color = "ElementBorder" } })
+            })
+
+            local SearchInput = s("TextBox", {
+                FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
+                TextColor3 = Color3.fromRGB(200, 200, 200),
+                TextSize = 13,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Center,
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, -36, 1, 0),
+                Position = UDim2.new(0, 8, 0, 0),
+                PlaceholderText = "Search...",
+                PlaceholderColor3 = Color3.fromRGB(120, 120, 120),
+                ClearTextOnFocus = false,
+                Text = "",
+                Parent = SearchFrame,
+                ThemeTag = { TextColor3 = "Text", PlaceholderColor3 = "SubText" }
+            })
+
+            local SearchIcon = s("ImageLabel", {
+                Size = UDim2.fromOffset(16, 16),
+                Position = UDim2.new(1, -13, 0.5, 0),
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                BackgroundTransparency = 1,
+                Image = "rbxassetid://10734943674",
+                Parent = SearchFrame,
+                ImageTransparency = 0.3,
+                ThemeTag = { ImageColor3 = "SubText" }
+            })
+            
+            -- 🟢 ทำระบบไฟวิ่งสี RGB รอบกรอบ Search ตามที่สั่งไว้
+            local searchStroke = SearchFrame:FindFirstChildWhichIsA("UIStroke")
+            local rgbSearchGlow = s("UIGradient", { Rotation = 0, Name = "BorderShineGradient" })
+            
+            m.AddSignal(SearchInput.Focused, function()
+                if searchStroke then
+                    searchStroke.Color = Color3.fromRGB(255, 255, 255)
+                    searchStroke.Transparency = 0
+                    rgbSearchGlow.Parent = searchStroke
+                    table.insert(m.GradientBorders, rgbSearchGlow)
+                end
+            end)
+            
+            m.AddSignal(SearchInput.FocusLost, function()
+                if searchStroke then
+                    rgbSearchGlow.Parent = nil
+                    m.OverrideTag(searchStroke, { Color = "ElementBorder" })
+                    searchStroke.Transparency = 0.5
+                end
+            end)
+
+            m.AddSignal(SearchInput:GetPropertyChangedSignal("Text"), function()
+                UpdateElementVisibility(SearchInput.Text)
+            end)
+
+            m.AddSignal(game:GetService("UserInputService").InputBegan, function(input, gp)
+                if gp then return end
+                if input.KeyCode == Enum.KeyCode.Escape and SearchInput:IsFocused() then
+                    SearchInput.Text = ""
+                    SearchInput:ReleaseFocus()
+                end
+            end)
+
+            v.SearchElements = SearchElements
+            v.AllElements = AllElements
+            v.RegisterElement = RegisterElement
+            v.UpdateElementVisibility = UpdateElementVisibility
+
+            local tabHolderTop = v.ShowSearch and 34 or 0
+            v.TabHolderTop = tabHolderTop
+
             v.TabHolder =
                 s(
                 "ScrollingFrame",
                 {
-                    Size = UDim2.fromScale(1, 1),
+                    Size = UDim2.new(1, 0, 1, -tabHolderTop),
+                    Position = UDim2.new(0, 0, 0, tabHolderTop),
                     BackgroundTransparency = 1,
                     ScrollBarImageTransparency = 1,
                     ScrollBarThickness = 0,
@@ -1916,7 +2203,7 @@ local aa = {
                     BackgroundTransparency = 1,
                     ClipsDescendants = true
                 },
-                {v.TabHolder, D}
+                {SearchFrame, v.TabHolder, D}
             )
             v.TabDisplay =
                 s(
@@ -2053,7 +2340,7 @@ local aa = {
             local I, J = 0, 0
             v.SelectorPosMotor:onStep(
                 function(K)
-                    D.Position = UDim2.new(0, 0, 0, K + 17)
+                    D.Position = UDim2.new(0, 0, 0, K + 17 + v.TabHolder.Position.Y.Offset)
                     local L = tick()
                     local M = L - J
                     if I ~= nil then
@@ -2279,6 +2566,8 @@ local aa = {
                 Registry = {},
                 Signals = {},
                 TransparencyMotors = {},
+                GradientBorders = {}, -- 🟢 ของเดิม (เอฟเฟคขอบ)
+                RGBScrollbars = {},   -- 🟢 เพิ่มตัวนี้สำหรับแถบเลื่อน RGB
                 DefaultProperties = {
                     ScreenGui = {ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling},
                     Frame = {
@@ -2365,10 +2654,44 @@ local aa = {
             for o, p in next, k.TransparencyMotors do
                 p:setGoal(j.Instant.new(k.GetThemeProperty "ElementTransparency"))
             end
+            
+            local accentColor = k.GetThemeProperty("Accent")
+            
+            -- 🟢 1. เปลี่ยนให้ Stroke เป็นสี Accent ของธีมนั้นๆ ตลอดเวลา (สว่างตลอด)
+            -- 🟢 2. Gradient จะทำหน้าที่แค่เพิ่ม "ความสว่าง" ให้ส่วนที่แสงวิ่งผ่านเท่านั้น
+            local newColorSeq = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)), -- ขาวล้วน
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)), -- ขาวล้วน
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+            })
+            
+            -- 🟢 3. ปรับ Transparency: ให้พื้นที่อื่นจางๆ แต่จุดที่ไฟวิ่งให้โปร่งใส (0) 
+            -- เพื่อให้เห็นสี Accent ของ UIStroke ที่อยู่ข้างหลังชัดๆ
+            local newTransSeq = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 0.6), -- ปรับความจางของช่วงที่ไม่มีไฟวิ่ง (0.6 คือกำลังดี)
+                NumberSequenceKeypoint.new(0.3, 0), -- จุดเริ่มสว่าง
+                NumberSequenceKeypoint.new(0.7, 0), -- จุดจบสว่าง
+                NumberSequenceKeypoint.new(1, 0.6)
+            })
+
+            if k.GradientBorders then
+                for idx = #k.GradientBorders, 1, -1 do
+                    local grad = k.GradientBorders[idx]
+                    if grad and grad.Parent then
+                        grad.Color = newColorSeq
+                        grad.Transparency = newTransSeq
+                        -- บังคับให้ Stroke เป็นสี Accent เสมอ
+                        grad.Parent.Color = accentColor
+                    else
+                        table.remove(k.GradientBorders, idx)
+                    end
+                end
+            end
+
             local thm = i[e(h).Theme]
             local x = getgenv().Fluent
             if x.Window and x.Window.AcrylicPaint then
-                if Animation and Animation.Apply then Animation.Apply(thm, x.Window.AcrylicPaint.Frame) end
+                if Animation and Animation.Apply then Animation.Apply(thm, x.GUI) end
                 getgenv().ButtonGradients = thm.ButtonGradient
             end
         end
@@ -2424,6 +2747,39 @@ local aa = {
             end
             return t, u
         end
+        -- 🟢 ระบบหมุนไฟวิ่งแบบไม่แดกสเปค + Scrollbar RGB
+        local RunService = game:GetService("RunService")
+        local globalRot = 0
+        local rgbHue = 0 -- ตัวแปรเก็บค่าคลื่นสี RGB
+
+        RunService.RenderStepped:Connect(function(dt)
+            globalRot = (globalRot + dt * 150) % 360 -- ความเร็วไฟวิ่งขอบ
+            rgbHue = (rgbHue + dt * 0.50) % 1 -- ความเร็วสี RGB ของ Scrollbar (เปลี่ยนเลข 0.15 ได้)
+            local currentRGB = Color3.fromHSV(rgbHue, 1, 1) -- สร้างสี RGB ปัจจุบัน
+
+            -- 1. อัปเดตไฟวิ่งรอบขอบปุ่ม
+            for idx = #k.GradientBorders, 1, -1 do
+                local grad = k.GradientBorders[idx]
+                if grad and grad.Parent then
+                    grad.Rotation = globalRot
+                else
+                    table.remove(k.GradientBorders, idx)
+                end
+            end
+            
+            -- 2. อัปเดตแถบเลื่อน (Scrollbar) ให้เป็น RGB
+            if k.RGBScrollbars then
+                for idx = #k.RGBScrollbars, 1, -1 do
+                    local scrollbar = k.RGBScrollbars[idx]
+                    if scrollbar and scrollbar.Parent then
+                        scrollbar.ScrollBarImageColor3 = currentRGB
+                    else
+                        table.remove(k.RGBScrollbars, idx)
+                    end
+                end
+            end
+        end)
+
         return k
     end,
     [19] = function()
@@ -2969,7 +3325,8 @@ local aa = {
         g.__index = g
         g.__type = "Dropdown"
         function g.New(h, i, j)
-            local isLocked = j.Locked -- 🛡️ ล็อคตัวแปร
+            local isLocked = j.Locked
+            j.Search = (j.Search == nil) and true or j.Search
             local k, l, m =
                 h.Library,
                 {
@@ -3037,7 +3394,7 @@ local aa = {
                         e(
                             "UIStroke",
                             {
-                                Transparency = isLocked and 0.9 or 0.5, -- 🛠️ ดักเส้นขอบให้จางลง (0.9) ด้วย
+                                Transparency = isLocked and 0.9 or 0.5,
                                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                                 ThemeTag = {Color = "InElementBorder"}
                             }
@@ -3047,50 +3404,66 @@ local aa = {
                     }
                 ),
                 e("UIListLayout", {Padding = UDim.new(0, 3)})
+                
             local t =
                 e(
                 "ScrollingFrame",
                 {
-                    Size = UDim2.new(1, -5, 1, -10),
-                    Position = UDim2.fromOffset(5, 5),
+                    Active = true,
+                    Size = UDim2.new(1, -5, 1, j.Search and -43 or -10),
+                    Position = UDim2.fromOffset(5, j.Search and 38 or 5),
                     BackgroundTransparency = 1,
                     BottomImage = "rbxassetid://6889812791",
                     MidImage = "rbxassetid://6889812721",
                     TopImage = "rbxassetid://6276641225",
                     ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
-                    ScrollBarImageTransparency = 0.95,
+                    ScrollBarImageTransparency = 0.60,
                     ScrollBarThickness = 4,
                     BorderSizePixel = 0,
                     CanvasSize = UDim2.fromScale(0, 0)
                 },
                 {s}
             )
-            local u =
-                e(
-                "Frame",
-                {Size = UDim2.fromScale(1, 0.6), ThemeTag = {BackgroundColor3 = "DropdownHolder"}},
-                {
-                    t,
-                    e("UICorner", {CornerRadius = UDim.new(0, 7)}),
-                    e(
-                        "UIStroke",
-                        {ApplyStrokeMode = Enum.ApplyStrokeMode.Border, ThemeTag = {Color = "DropdownBorder"}}
-                    ),
-                    e(
-                        "ImageLabel",
-                        {
-                            BackgroundTransparency = 1,
-                            Image = "http://www.roblox.com/asset/?id=5554236805",
-                            ScaleType = Enum.ScaleType.Slice,
-                            SliceCenter = Rect.new(23, 23, 277, 277),
-                            Size = UDim2.fromScale(1, 1) + UDim2.fromOffset(30, 30),
-                            Position = UDim2.fromOffset(-15, -15),
-                            ImageColor3 = Color3.fromRGB(0, 0, 0),
-                            ImageTransparency = 0.1
-                        }
-                    )
-                }
-            )
+            
+            table.insert(c.RGBScrollbars, t)
+
+            local SearchBar, SearchBox, SearchStroke, rgbGlow
+            if j.Search then
+                SearchBar = e("Frame", { Size = UDim2.new(1, -10, 0, 28), Position = UDim2.fromOffset(5, 5), BackgroundTransparency = 0.15, ThemeTag = { BackgroundColor3 = "DropdownFrame" }, ZIndex = 24 }, {
+                    e("UICorner", { CornerRadius = UDim.new(0, 8) }),
+                    e("UIStroke", { Name = "Stroke", Transparency = 0.45, ApplyStrokeMode = Enum.ApplyStrokeMode.Border, ThemeTag = { Color = "DropdownBorder" } }),
+                    e("ImageLabel", { Image = "rbxassetid://10734943674", BackgroundTransparency = 1, Size = UDim2.fromOffset(16, 16), Position = UDim2.fromOffset(8, 6), ZIndex = 25, ThemeTag = { ImageColor3 = "SubText" } })
+                })
+                SearchBox = e("TextBox", { PlaceholderText = "Search...", ClearTextOnFocus = false, Text = "", TextSize = 14, FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Medium, Enum.FontStyle.Normal), TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, ThemeTag = { TextColor3 = "SubText", PlaceholderColor3 = "SubText" }, Parent = SearchBar, Size = UDim2.new(1, -34, 1, 0), Position = UDim2.fromOffset(28, 0), ZIndex = 24 })
+                SearchStroke = SearchBar:FindFirstChild("Stroke")
+                rgbGlow = e("UIGradient", { Rotation = 0 })
+                
+                c.AddSignal(SearchBox.Focused, function()
+                    if SearchStroke then
+                        SearchStroke.Color = Color3.fromRGB(255, 255, 255)
+                        SearchStroke.Transparency = 0
+                        rgbGlow.Parent = SearchStroke
+                        table.insert(c.GradientBorders, rgbGlow)
+                    end
+                end)
+                c.AddSignal(SearchBox.FocusLost, function()
+                    if SearchStroke then
+                        rgbGlow.Parent = nil
+                        c.OverrideTag(SearchStroke, { Color = "DropdownBorder" })
+                        SearchStroke.Transparency = 0.45
+                    end
+                end)
+            end
+
+            local uItems = {
+                t,
+                e("UICorner", {CornerRadius = UDim.new(0, 7)}),
+                e("UIStroke", {ApplyStrokeMode = Enum.ApplyStrokeMode.Border, ThemeTag = {Color = "DropdownBorder"}}),
+                e("ImageLabel", { BackgroundTransparency = 1, Image = "http://www.roblox.com/asset/?id=5554236805", ScaleType = Enum.ScaleType.Slice, SliceCenter = Rect.new(23, 23, 277, 277), Size = UDim2.fromScale(1, 1) + UDim2.fromOffset(30, 30), Position = UDim2.fromOffset(-15, -15), ImageColor3 = Color3.fromRGB(0, 0, 0), ImageTransparency = 0.1 })
+            }
+            if SearchBar then table.insert(uItems, SearchBar) end
+
+            local u = e("Frame", {Size = UDim2.fromScale(1, 0.6), ThemeTag = {BackgroundColor3 = "DropdownHolder"}}, uItems)
             local v =
                 e(
                 "Frame",
@@ -3106,14 +3479,38 @@ local aa = {
                     v.Position = UDim2.fromOffset(p.AbsolutePosition.X - 1, p.AbsolutePosition.Y - 5 - w)
                 end, 0
             local y, z = function()
-                    if #l.Values > 10 then
+                    local visibleCount = 0
+                    for _, child in next, t:GetChildren() do
+                        if not child:IsA("UIListLayout") and child.Visible then
+                            visibleCount = visibleCount + 1
+                        end
+                    end
+                    local targetHeight = s.AbsoluteContentSize.Y + (j.Search and 43 or 10)
+                    if visibleCount > 10 then
                         v.Size = UDim2.fromOffset(x, 392)
                     else
-                        v.Size = UDim2.fromOffset(x, s.AbsoluteContentSize.Y + 10)
+                        v.Size = UDim2.fromOffset(x, targetHeight)
                     end
                 end, function()
                     t.CanvasSize = UDim2.fromOffset(0, s.AbsoluteContentSize.Y)
                 end
+            
+            if SearchBox then
+                c.AddSignal(SearchBox:GetPropertyChangedSignal("Text"), function()
+                    local txt = SearchBox.Text:lower()
+                    for _, element in next, t:GetChildren() do
+                        if not element:IsA("UIListLayout") then
+                            local btnLbl = element:FindFirstChild("ButtonLabel")
+                            if btnLbl then
+                                element.Visible = (txt == "" or btnLbl.Text:lower():find(txt, 1, true) ~= nil)
+                            end
+                        end
+                    end
+                    z()
+                    y()
+                end)
+            end
+
             w()
             y()
             c.AddSignal(p:GetPropertyChangedSignal "AbsolutePosition", w)
@@ -3140,6 +3537,7 @@ local aa = {
                 l.Opened = true
                 A.ScrollingEnabled = false
                 v.Visible = true
+                if SearchBox then SearchBox.Text = "" end
                 af:Create(
                     u,
                     TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
@@ -3688,7 +4086,6 @@ local aa = {
             d.Content = d.Content or ""
             local e = ac(ag.Element)(d.Title, d.Content, aj.Container, false)
             e.Frame.BackgroundTransparency = 0.92
-            e.Border.Transparency = 0.6
             return e
         end
         return aj
@@ -3782,30 +4179,33 @@ local aa = {
                     l
                 }
             )
+            local actInp = nil
             ah.AddSignal(
-                k.InputBegan,
+                o.InputBegan,
                 function(p)
                     if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
                         i = true
+                        actInp = p
+                        if d.ScrollFrame then d.ScrollFrame.ScrollingEnabled = false end
+                        local s = math.clamp((p.Position.X - l.AbsolutePosition.X) / l.AbsoluteSize.X, 0, 1)
+                        h:SetValue(h.Min + ((h.Max - h.Min) * s))
                     end
                 end
             )
             ah.AddSignal(
-                k.InputEnded,
+                af.InputEnded,
                 function(p)
-                    if p.UserInputType == Enum.UserInputType.MouseButton1 or p.UserInputType == Enum.UserInputType.Touch then
+                    if p == actInp then
                         i = false
+                        actInp = nil
+                        if d.ScrollFrame then d.ScrollFrame.ScrollingEnabled = true end
                     end
                 end
             )
             ah.AddSignal(
                 af.InputChanged,
                 function(p)
-                    if
-                        i and
-                            (p.UserInputType == Enum.UserInputType.MouseMovement or
-                                p.UserInputType == Enum.UserInputType.Touch)
-                     then
+                    if i and p == actInp then
                         local s = math.clamp((p.Position.X - l.AbsolutePosition.X) / l.AbsoluteSize.X, 0, 1)
                         h:SetValue(h.Min + ((h.Max - h.Min) * s))
                     end
